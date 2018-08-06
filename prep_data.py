@@ -70,9 +70,12 @@ def preprocess(file_list, start, end, sr=16000, scale=4, in_dim=64, out_dim=8, t
 def load_wav_list(dirname='data/'):
     file_list = []    
     filenames = os.listdir(dirname)
+    file_extensions = set(['.wav'])
     for filename in filenames:
-        full_filename = os.path.join(dirname, filename)
-        file_list.append(full_filename)
+        ext = os.path.splitext(filename)[-1]
+        if ext in file_extensions:
+            full_filename = os.path.join(dirname, filename)
+            file_list.append(full_filename)
     
     print('load wav list examples..')
     for i in range(5):
