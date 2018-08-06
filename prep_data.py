@@ -6,7 +6,6 @@ import h5py
 import random
 
 my_wav_dir = '/mnt/GB/wav/' # set your local path containing .wav data 
-my_list_path = '/mnt/GB/wav_list.txt' # set your wav list file path
 
 def save(dataset_name, X, Y):
     with h5py.File(dataset_name, 'w') as f:
@@ -68,15 +67,12 @@ def preprocess(file_list, start, end, sr=16000, scale=4, in_dim=64, out_dim=8, t
 
     return lr_patches, hr_patches, dataset_name
 
-def load_wav_list(local_dir, list_path):
+def load_wav_list(dirname='data/'):
     file_list = []    
-    # Before using it,
-    # make wav list file 
-    # ex) ls .../wav/ > wav_list.txt
-    with open(list_path) as f:
-        for line in f:
-            filename = line.strip()
-            file_list.append(os.path.join(local_dir, filename))
+    filenames = os.listdir(dirname)
+    for filename in filenames:
+        full_filename = os.path.join(dirname, filename)
+        file_list.append(full_filename)
     
     print('load wav list examples..')
     for i in range(5):
@@ -94,7 +90,7 @@ def run():
     in_dim = 64 
     out_dim = 8
     
-    file_list = load_wav_list(local_dir=my_wav_dir, list_path=my_list_path)
+    file_list = load_wav_list(dirname=my_wav_dir)
     
     for i in range(0, len(file_list), dataset_size):
         if i == convert_limit: break
