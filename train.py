@@ -1,7 +1,7 @@
 import os
 from keras.callbacks import ModelCheckpoint, EarlyStopping
-from keras import backend as K
 from model import base_model
+from utils import load_model, SNR, sum_loss, compile_model
 import h5py
 
 def load_h5_list(dirname):
@@ -24,37 +24,12 @@ def load_h5(dataset_name):
     print(Y.shape)
     return X, Y
 
-# load before compile
-def load_model(model, weights_file, keep_train=False):
-    if keep_train: model.load_weights(weights_file)
-    return model
-
-
-def SNR(y_true,y_pred):
-    P = y_pred
-    Y = y_true
-    sqrt_l2_loss = K.sqrt(K.mean((P-Y)**2 + 1e-6))
-    sqrn_l2_norm = K.sqrt(K.mean(Y**2))
-    snr = 20 * K.log(sqrn_l2_norm / sqrt_l2_loss + 1e-8) / K.log(10.)
-    avg_snr = K.mean(snr)
-    return avg_snr
-
-def sum_loss(y_true,y_pred):
-    P = y_pred
-    Y = y_true
-    loss = K.sum((P-Y)**2)
-    return loss
-
-def compile_model(model):
-    model.compile(loss='mse', optimizer="adam", metrics=[sum_loss, SNR])
-    return model
-
 
 def run():
     # Hyper params
     EPOCHS = 10
     BATCH_SIZE = 4000
-    KEEP_TRAIN = False
+    LOAD_WEIGHTS = True
     WEIGHTS_PATH = 'weights/'
     WEIGHTS_FILE = 'asr-weights.hdf5'
     VALID_SPLIT = 0.05
@@ -62,7 +37,7 @@ def run():
     MINI_EPOCH = 1 # set each dataset's epochs
     
     model = base_model()
-    model = load_model(model, WEIGHTS_FILE, keep_train=KEEP_TRAIN)
+    model = load_model(model, os.path.join(WEIGHTS_PATH, WEIGHTS_FILE), load_weights=LOAD_WEIGHTS)
     model = compile_model(model)
     
     datasets = load_h5_list('data/')

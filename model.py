@@ -2,7 +2,7 @@ import keras
 from keras.models import Sequential
 from keras.layers.core import Dense, Activation, Dropout
 from keras.layers.recurrent import LSTM, GRU
-from keras.layers import Bidirectional, Lambda, Conv1D, Lambda
+from keras.layers import Lambda, Conv1D, Lambda
 from keras.layers.advanced_activations import LeakyReLU
 import tensorflow as tf
 

@@ -6,6 +6,34 @@ from matplotlib import pyplot as plt
 from scipy import signal
 import h5py
 import wave
+from keras import backend as K
+
+def SNR(y_true,y_pred):
+    P = y_pred
+    Y = y_true
+    sqrt_l2_loss = K.sqrt(K.mean((P-Y)**2 + 1e-6))
+    sqrn_l2_norm = K.sqrt(K.mean(Y**2))
+    snr = 20 * K.log(sqrn_l2_norm / sqrt_l2_loss + 1e-8) / K.log(10.)
+    avg_snr = K.mean(snr)
+    return avg_snr
+
+def sum_loss(y_true,y_pred):
+    P = y_pred
+    Y = y_true
+    loss = K.sum((P-Y)**2)
+    return loss
+
+def compile_model(model):
+    model.compile(loss='mse', optimizer="adam", metrics=[sum_loss, SNR])
+    return model
+
+# load before compile
+def load_model(model, weights_file, load_weights=False):
+    if load_weights: 
+        model.load_weights(weights_file)
+        print('load model weights success!')
+    return model
+
 
 def wav2plot(signal):
     #Extract Raw Audio from Wav File

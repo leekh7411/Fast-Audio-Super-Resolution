@@ -15,7 +15,7 @@ def save(dataset_name, X, Y):
         label_set[...] = Y
     print('save complete -> %s'%(dataset_name))
 
-def preprocess(file_list, start, end, sr=16000, scale=4, in_dim=64, out_dim=8, tag='train'):
+def preprocess(file_list, start, end, sr=48000, scale=6, in_dim=64, out_dim=8, tag='train'):
     random.shuffle(file_list)
     data_size = end - start + 1
     lr_patches = list()
@@ -78,8 +78,12 @@ def load_wav_list(dirname='data/'):
             file_list.append(full_filename)
     
     print('load wav list examples..')
-    for i in range(5):
-        print(file_list[i])
+    if len(file_list) > 5:
+        for i in range(5):
+            print(file_list[i])
+    else:
+        for file in file_list:
+            print(file)
     
     return file_list
 
