@@ -27,8 +27,8 @@ def load_h5(dataset_name):
 
 def run():
     # Hyper params
-    EPOCHS = 10
-    BATCH_SIZE = 4000
+    EPOCHS = 1
+    BATCH_SIZE = 256
     LOAD_WEIGHTS = True
     WEIGHTS_PATH = 'weights/'
     WEIGHTS_FILE = 'asr-weights.hdf5'
@@ -55,7 +55,7 @@ def run():
                     callbacks=[checkpointer, earlystopper],
                     validation_split=VALID_SPLIT)
     
-    
+    print('Training Finish')
 if __name__ == '__main__':
     run()    
     

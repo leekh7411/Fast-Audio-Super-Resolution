@@ -5,7 +5,7 @@ from utils import upsample
 import h5py
 import random
 
-my_wav_dir = '/mnt/GB/wav/' # set your local path containing .wav data 
+my_wav_dir = '/mnt/dataSet/VCTK-Corpus-Subset/' # set your local path containing .wav data 
 
 def save(dataset_name, X, Y):
     with h5py.File(dataset_name, 'w') as f:
@@ -15,7 +15,7 @@ def save(dataset_name, X, Y):
         label_set[...] = Y
     print('save complete -> %s'%(dataset_name))
 
-def preprocess(file_list, start, end, sr=48000, scale=6, in_dim=64, out_dim=8, tag='train'):
+def preprocess(file_list, start, end, sr=48000, scale=6, dimension=64, stride=8, tag='train'):
     random.shuffle(file_list)
     data_size = end - start + 1
     lr_patches = list()
@@ -37,12 +37,16 @@ def preprocess(file_list, start, end, sr=48000, scale=6, in_dim=64, out_dim=8, t
         x_lr = upsample(x_lr, scale)
         
         x_lr = np.reshape(x_lr,(len(x_lr),1))
-        #x_hr = np.reshape(x_hr,(len(x_hr),1))
+        x_hr = np.reshape(x_hr,(len(x_hr),1))
         
-        for i in range(0, x_lr.shape[0]-in_dim , out_dim):
-            lr_patch = x_lr[i:i+in_dim]
-            mid = in_dim // 2 - out_dim // 2
-            hr_patch = x_hr[i+mid:i+mid+out_dim]
+        for i in range(0, x_lr.shape[0]-dimension , stride):
+            lr_patch = x_lr[i:i+dimension]
+            
+            #mid = dimension // 2 - stride // 2
+            #hr_patch = x_hr[i+mid:i+mid+stride]
+            
+            hr_patch = x_hr[i:i+dimension]
+            
             lr_patches.append(lr_patch)
             hr_patches.append(hr_patch)
     
@@ -52,16 +56,16 @@ def preprocess(file_list, start, end, sr=48000, scale=6, in_dim=64, out_dim=8, t
     hr_patches = np.array(hr_patches[0:hr_len])
     lr_patches = np.array(lr_patches[0:lr_len])
     
-    print('high resolution(Y) dataset shape is ',hr_patches.shape) # (None, 64, 1)
-    print('low resolution(X) dataset shape is ',lr_patches.shape) # (None, 8)
+    print('high resolution(Y) dataset shape is ',hr_patches.shape)
+    print('low resolution(X) dataset shape is ',lr_patches.shape)
                 
-    dataset_name = 'data/asr-ex%d-start%d-end%d-scale%d-sr%d-in%d-out%d-%s.h5'%(data_size,
+    dataset_name = 'data/asr-ex%d-start%d-end%d-scale%d-sr%d-dim%d-strd%d-%s.h5'%(data_size,
                                                                                     start,
                                                                                     end,
                                                                                     scale,
                                                                                     sr,
-                                                                                    in_dim,
-                                                                                    out_dim,
+                                                                                    dimension,
+                                                                                    stride,
                                                                                     tag
                                                                                    )
 
@@ -78,24 +82,22 @@ def load_wav_list(dirname='data/'):
             file_list.append(full_filename)
     
     print('load wav list examples..')
-    if len(file_list) > 5:
-        for i in range(5):
-            print(file_list[i])
-    else:
-        for file in file_list:
-            print(file)
     
+    for i, file in enumerate(file_list):
+        print(file)
+        if i > 5: break
+
     return file_list
 
 
 def run():
-    convert_limit = 10 # All  dataset size
-    dataset_size  = 10 # each dataset size
-    sr = 48000 # sampling rate
-    scale = 6 # down scaling ratio
-    dsr = sr // scale # 48000 // 6 = 8000(hz)
-    in_dim = 64 
-    out_dim = 8
+    convert_limit = 10  # All  dataset size
+    dataset_size  = 10  # each dataset size
+    sr = 48000          # sampling rate
+    scale = 8           # down scaling ratio
+    dsr = sr // scale   # 48000 // 8 = 6000(hz)
+    dimension = 256     # Input & Output size 
+    stride = 64         # stride size
     
     file_list = load_wav_list(dirname=my_wav_dir)
     
@@ -106,9 +108,9 @@ def run():
                                                      end     =  i + dataset_size - 1,
                                                      sr      =  sr, 
                                                      scale   =  scale,
-                                                     in_dim  =  in_dim,
-                                                     out_dim =  out_dim,
-                                                     tag     =  'train-s2p')
+                                                     dimension  =  dimension,
+                                                     stride  =  stride,
+                                                     tag     =  'train')
         save(trainset_name, train_X, train_Y)
 
         

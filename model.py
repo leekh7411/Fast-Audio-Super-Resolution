@@ -31,6 +31,112 @@ def SubPixel1D(input_shape, r, color=False):
 
     return Lambda(subpixel, output_shape=subpixel_shape)
 
+'''
+Update 2018.09.29
+- Input & output Shape -> (256,1)
+- Fast and Upsample much better
+- If you would like to use this model, set dataset size to (64,1) -> (256,1)
+'''
+def base_model(summary=True):
+    print('load base model..')
+    x = keras.layers.Input((256,1))
+    main_input = x
+    
+    # 128 256 512 512
+    # 65 31 15 15
+
+    
+    # Donwsampling layer 1
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal', filters=16, kernel_size=16, activation=None, strides=2)(x)
+    x = LeakyReLU(0.2)(x)
+    x1 = x # 128
+    
+    # Donwsampling layer 2
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal', filters=32, kernel_size=8, activation=None, strides=2)(x)
+    x = LeakyReLU(0.2)(x)
+    x2 = x # 64
+    
+    # Donwsampling layer 3
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal', filters=32, kernel_size=4, activation=None, strides=2)(x)
+    x = LeakyReLU(0.2)(x)
+    x3 = x # 32
+    
+    # Donwsampling layer 4
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal', filters=32, kernel_size=4, activation=None, strides=2)(x)
+    x = LeakyReLU(0.2)(x)
+    x4 = x # 16
+    
+    # Donwsampling layer 5
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal', filters=32, kernel_size=4, activation=None, strides=2)(x)
+    x = LeakyReLU(0.2)(x)
+    x5 = x # 8
+    
+    # Donwsampling layer 6
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal', filters=32, kernel_size=4, activation=None, strides=2)(x)
+    x = LeakyReLU(0.2)(x)
+    x6 = x # 4
+    
+    # Bottleneck layer 
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal', filters=32, kernel_size=4, activation=None, strides=2)(x)
+    x = LeakyReLU(0.2)(x)
+    
+    # Upsampling layer 6
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal',filters=2*32, kernel_size=4, activation=None)(x)
+    x = Activation('relu')(x)
+    x = Dropout(rate=0.5)(x)
+    x = SubPixel1D(x.shape, r=2, color=False)(x)
+    x = keras.layers.concatenate([x, x6])
+    
+    # Upsampling layer 5
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal',filters=2*32, kernel_size=4, activation=None)(x)
+    x = Activation('relu')(x)
+    x = Dropout(rate=0.5)(x)
+    x = SubPixel1D(x.shape, r=2, color=False)(x)
+    x = keras.layers.concatenate([x, x5])
+     
+    # Upsampling layer 4
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal',filters=2*32, kernel_size=4, activation=None)(x)
+    x = Activation('relu')(x)
+    x = Dropout(rate=0.5)(x)
+    x = SubPixel1D(x.shape, r=2, color=False)(x)
+    x = keras.layers.concatenate([x, x4])
+    
+    
+    # Upsampling layer 3
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal',filters=2*32, kernel_size=4, activation=None)(x)
+    x = Activation('relu')(x)
+    x = Dropout(rate=0.5)(x)
+    x = SubPixel1D(x.shape, r=2, color=False)(x)
+    x = keras.layers.concatenate([x, x3])
+    
+    
+    # Upsampling layer 2
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal',filters=2*32, kernel_size=8, activation=None)(x)
+    x = Activation('relu')(x)
+    x = Dropout(rate=0.5)(x)
+    x = SubPixel1D(x.shape, r=2, color=False)(x)
+    x = keras.layers.concatenate([x, x2])
+    
+    # Upsampling layer 1
+    x = Conv1D(padding='same', kernel_initializer='Orthogonal',filters=2*16, kernel_size=16, activation=None)(x)
+    x = Activation('relu')(x)
+    x = Dropout(rate=0.5)(x)
+    x = SubPixel1D(x.shape, r=2, color=False)(x)
+    x = keras.layers.concatenate([x, x1])
+   
+    
+    # SubPixel-1D Final
+    x = Conv1D(padding='same', kernel_initializer='he_normal',filters=2, kernel_size=8, activation=None)(x)     
+    x = SubPixel1D(x.shape, r=2, color=False)(x)
+    output = keras.layers.add([x, main_input])
+    model  = keras.models.Model(main_input,output)
+    
+    if summary: 
+        model.summary()       
+        
+    return model
+
+'''
 def base_model(summary=True):
     x = keras.layers.Input((64,1))
     main_input = x
@@ -53,38 +159,7 @@ def base_model(summary=True):
     # Dim -> (None, 8, 32) --> (None, 4, 32) # Bottleneck layer 
     x = Conv1D(padding='same', kernel_initializer='Orthogonal', filters=96, kernel_size=8, activation=None, strides=2)(x)
     x = LeakyReLU(0.2)(x)
-    
-    ''' 
-    
-    # If you wants input(64) -> output(64) format likes the autoencoder model, use this!
-    
-    
-    # Dim -> (None, 4, 32) --> (None, 8, 64) # Upsampling layer 3
-    # Stacking layer with the x3
-    x = Conv1D(padding='same', kernel_initializer='Orthogonal',filters=2*32, kernel_size=8, activation=None)(x)
-    x = Activation('relu')(x)
-    x = Dropout(rate=0.5)(x)
-    x = SubPixel1D(x.shape, r=2, color=False)(x)
-    x = keras.layers.concatenate([x, x3])
-    
-    
-    # Dim -> (None, 8, 64) --> (None, 16, 64) # Upsampling layer 2
-    # Stacking layer with the x2
-    x = Conv1D(padding='same', kernel_initializer='Orthogonal',filters=2*32, kernel_size=8, activation=None)(x)
-    x = Activation('relu')(x)
-    x = Dropout(rate=0.5)(x)
-    x = SubPixel1D(x.shape, r=2, color=False)(x)
-    x = keras.layers.concatenate([x, x2])
-    
-    # Dim -> (None, 16, 64) --> (None, 32, 64) # Upsampling layer 1
-    # Stacking layer with the x1
-    x = Conv1D(padding='same', kernel_initializer='Orthogonal',filters=2*32, kernel_size=8, activation=None)(x)
-    x = Activation('relu')(x)
-    x = Dropout(rate=0.5)(x)
-    x = SubPixel1D(x.shape, r=2, color=False)(x)
-    x = keras.layers.concatenate([x, x1])
-    '''
-    
+       
     # SubPixel-1D Final
     # Dim -> (None, 4, 32) --> (None, 8, 1)
     x = Conv1D(padding='same', kernel_initializer='he_normal',filters=2, kernel_size=3, activation=None)(x)     
@@ -101,3 +176,4 @@ def base_model(summary=True):
         model.summary()       
         
     return model
+'''

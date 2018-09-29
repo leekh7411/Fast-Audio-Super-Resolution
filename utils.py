@@ -80,6 +80,7 @@ def STFT(X, title,n_fft=2048, show=False):
 def showSpectrum(S,title,aspect=0.1):
     aS = np.abs(S)
     iS = np.log1p(aS)
+    plt.figure(figsize=(20,10))
     plt.imshow(iS.T, aspect=aspect)
     plt.tight_layout()
     plt.title(title)

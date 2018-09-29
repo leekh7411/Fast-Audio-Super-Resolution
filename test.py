@@ -7,7 +7,7 @@ from prep_data import preprocess, load_wav_list
 
 def test_samples():
     # Hyper params
-    BATCH_SIZE = 4000
+    BATCH_SIZE = 256
     LOAD_WEIGHTS = True
     WEIGHTS_PATH = 'weights/'
     WEIGHTS_FILE = 'asr-weights.hdf5'
@@ -21,7 +21,7 @@ def test_samples():
     test_samples = load_wav_list('test-samples/')
     
     # patch sample data
-    X, Y, _ = preprocess(test_samples, start=0, end=len(test_samples)-1, sr=48000, scale=6, in_dim=64, out_dim=8, tag='test')
+    X, Y, _ = preprocess(test_samples, start=0, end=len(test_samples)-1, sr=48000, scale=6, dimension=256, stride=256, tag='test')
     
     print(X.shape)
     print(Y.shape)
@@ -38,4 +38,3 @@ def test_samples():
     STFT(Y.flatten(), title='Original',n_fft=2048, show=True)
     STFT(X.flatten(), title='Downsampled',n_fft=2048, show=True)
     STFT(pred.flatten(), title='Upsampled',n_fft=2048, show=True)   
-    
